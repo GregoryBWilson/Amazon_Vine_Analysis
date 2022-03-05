@@ -93,3 +93,54 @@ print("Total Paid 5 Star Reviews = ", total_paid_5, "(",percent_paid_5,"%)")
 total_unpaid_5 = helpful_unpaid.filter(helpful_unpaid.star_rating == '5').count()
 percent_unpaid_5 = total_unpaid_5/total_reviews*100
 print("Total Unpaid 5 Star Reviews = ", total_unpaid_5, "(",percent_unpaid_5,"%)")
+
+# 5. Determine the total number of reviews, the number of 5-star reviews, and the
+#    percentage of 5-star reviews for the two types of review (paid vs unpaid).
+
+total_reviews = help_total_50_plus.count()
+print("Total Reviews = ", total_reviews)
+total_paid_reviews = helpful_paid.count()
+print("Total Paid Reviews = ", total_paid_reviews)
+
+total_paid_5 = helpful_paid.filter(helpful_paid.star_rating == '5').count()
+percent_paid_5 = total_paid_5/total_paid_reviews*100
+print("Total Paid 5 Star Reviews = ", total_paid_5, "(",percent_paid_5,"%)")
+
+total_unpaid_reviews = helpful_unpaid.count()
+print("Total Unpaid Reviews = ", total_unpaid_reviews)
+
+total_unpaid_5 = helpful_unpaid.filter(helpful_unpaid.star_rating == '5').count()
+percent_unpaid_5 = total_unpaid_5/total_unpaid_reviews*100
+print("Total Unpaid 5 Star Reviews = ", total_unpaid_5, "(",percent_unpaid_5,"%)")
+
+# Distribution of Paid Rating 
+star_groups_paid = helpful_paid.groupBy(helpful_paid.star_rating).count()
+star_groups_paid = star_groups_paid.sort(star_groups_paid.star_rating)
+star_groups_paid.show()
+
+import pandas as pd
+paid_pandasDF = star_groups_paid.toPandas()
+paid_pandasDF
+
+import numpy as np
+
+weighted_average_paid = np.average(a =paid_pandasDF['star_rating'] , weights = paid_pandasDF['count'])
+weighted_average_paid
+
+# Distribution of Unpaid Rating 
+star_groups_unpaid = helpful_unpaid.groupBy(helpful_unpaid.star_rating).count()
+star_groups_unpaid = star_groups_unpaid.sort(star_groups_unpaid.star_rating)
+star_groups_unpaid.show()
+
+import pandas as pd
+unpaid_pandasDF = star_groups_unpaid.toPandas()
+unpaid_pandasDF
+
+import numpy as np
+
+weighted_average_unpaid = np.average(a =unpaid_pandasDF['star_rating'] , weights = unpaid_pandasDF['count'])
+weighted_average_unpaid
+
+# Calculate the Paid Ratings Bias
+paid_bias = (weighted_average_paid/weighted_average_unpaid - 1)*100
+paid_bias
