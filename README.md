@@ -1,10 +1,24 @@
-# Amazon_Vine_Analysis
+# Amazon Vine Analysis
 
-## Overview of the analysis
+## 1 Overview of the analysis
 
-## Results
+Continuing with our successful work with Jennifer on the SellBy project, we have been tasked with another, larger project: analyzing Amazon reviews written by members of the paid Amazon Vine program. This program allows manufacturers and publishers to receive reviews for their products. Companies pay a small fee to Amazon and provide products to Amazon Vine members, who are then required to publish a review.
 
-### Perform ETL on Amazon Product Reviews
+In this project, we will be using the https://s3.amazonaws.com/amazon-reviews-pds/tsv/amazon_reviews_us_Lawn_and_Garden_v1_00.tsv.gz dataset to conduct our analysis. We used PySpark to perform the ETL process to extract the dataset, transform the data, connect to an AWS RDS instance, and load the transformed data into pgAdmin, this can be found in section "2.1 Perform ETL on Amazon Product Reviews" . Next, we used PySpark to determine if there is any bias toward favorable reviews from Vine members in the dataset, this can be found in section "2.2 Determine Bias of Vine Reviews".
+
+Deeper analysis of the finds were conducted and can be found in section "2.3 Validating the Bias Analysis".  The summary of both of the analysis for has been prepared for Jennifer to submit to the SellBy stakeholders.
+
+## 2 Results
+
+In section 2.1 we used our knowledge of the cloud ETL process, and created an AWS RDS database with tables in pgAdmin, picked a Lawn and Gardens dataset from the Amazon Review datasets and extracted the dataset into a DataFrame. We transformed the DataFrame into four separate DataFrames that match the table schema in pgAdmin. Then, we uploaded the transformed data into the appropriate tables and ran queries in pgAdmin to confirm that the data has been uploaded.
+
+Continue with the review process, in section 2.2 we used your knowledge of PySpark and Pandasto determine if there is any bias towards reviews that were written as part of the Vine program. For this analysis, we determined that having a paid Vine review makes a slight neative difference in the percentage of 5-star reviews.
+
+Surprised by this outcome we completed a detailed analysis in section 2.3 that in fact demonstrates that paid Vine reviews, while producing a smaller percentage of 5 star review, are in fact significantly biased towards favorable reviews of products.
+
+### 2.1 Perform ETL on Amazon Product Reviews
+
+The ETL process for the Amazon Product Reviews to provided in the file Amazon_Reviews_ETL.ipynb, I also download the Python version of this notebook amazon_reviews_etl.py for those who may be interested.  This transformed data was then loaded into and Amazon hosted RDS Postgres database and accessed using pgAdmin.  Figures 1 through 8 below show the database queries in a code fence and the results as displayed in pgAdmin. 
 
 ```sql
 SELECT COUNT(*) FROM review_id_table;
@@ -106,7 +120,11 @@ SELECT * FROM vine_table FETCH FIRST 10 ROW ONLY;
 
 
 
-### Determine Bias of Vine Reviews
+### 2.2 Determine Bias of Vine Reviews
+
+In figures 9 through 13 and the associated code fences you can see how the review data is separated to conduct our analysis of paid and unpaid reviews.  Scroll don to figure 14 for a review of the 5 star analysis results and why we chose to have a more indepth looks at what was happening in the reviews.
+
+
 
 ```python
 # Create the vine_table. DataFrame
@@ -176,7 +194,7 @@ helpful_unpaid.show()
 
 
 
-As can be seen in figure 14 below a very small of all 5 star review  are paid.
+As can be seen in figure 14 below a very small percentage of all 5 star review are paid.
 
 ```python
 # The total number of reviews, the number of 5-star reviews, and the percentage 5-star reviews are calculated
@@ -230,7 +248,11 @@ At 45.6% for paid and 49.3% for unpaid it would appear that the paid reviews are
 
 ***Figure 15 - 5 Star Review Results by Group***
 
-In an effort to validate the finds found in the five star reviews we conducted further and more extensive analysis.  I the code fence below we created a dataframe to look at the distribution of paid ratings.
+Being slightly less favorable was not an expected outcoming and so we conducted further analysis, see section 2.3 for details.
+
+### 2.3 Validating the Bias Analysis
+
+In an effort to validate the finds found in the five star reviews we conducted further and more extensive analysis.  In the code fence below we created a dataframe to look at the distribution of paid ratings.
 
 ```python
 # Distribution of Paid Rating 
@@ -245,7 +267,7 @@ In figure 16 below you can see that the paid ratings are heavily weight to the h
 
 ***Figure 16 - Distribution of Paid Reviews***
 
-This dataframe was then converted to a Pandas dataframe using the code fence below.
+This dataframe was then converted to a Pandas dataframe using the code fence below, so that it was easier to work with.
 
 ```python
 import pandas as pd
@@ -253,7 +275,7 @@ paid_pandasDF = star_groups_paid.toPandas()
 paid_pandasDF
 ```
 
-In figure 17 is displayed the Pandas dataframe that we conducted further analysis on.
+In figure 17 is displayed the Pandas dataframe that we use to conduct further analysis.
 
 ![17_Pandas_Distribution_of_Paid_Reviews](Resources/17_Pandas_Distribution_of_Paid_Reviews.png "Figure 17 - Pandas Distribution of Paid Reviews")
 
@@ -280,13 +302,13 @@ star_groups_unpaid = star_groups_unpaid.sort(star_groups_unpaid.star_rating)
 star_groups_unpaid.show()
 ```
 
-In figure 18 below you can see that the unpaid ratings distributed quite differently than those of the paid.  The distribution is almost binary, with at large number of stars rating at both ends of the scale.
+In figure 18 below you can see that the unpaid ratings are distributed quite differently than those of the paid.  The distribution is almost binary, with a large number of stars rating at both ends of the scale.
 
 ![18_Distribution_of_Unpaid_Reviews](Resources\18_Distribution_of_Unpaid_Reviews.png "Figure 18 - Distribution of Unpaid Reviews.png")
 
 ***Figure 18 - Distribution of Unpaid Reviews***
 
-This dataframe was then converted to a Pandas dataframe using the code fence below.
+This dataframe was then also converted to a Pandas dataframe using the code fence below.
 
 ```python
 import pandas as pd
@@ -322,3 +344,12 @@ It was determined the the paid reviews were 14.086874110614133 % biased towards 
 
 ## Summary
 
+The ETL process to clean data, load it to an Amazon RDS and make that data accessible from pgAdmin is very useful and the data is highly accessible without having the burden of storing millions of rows of data in local storage.  Using PySpark and Pandas to quickly conduct analysis on large dataframes is also of tremendous value.  Big data is definitely a major hurtle for growing businesses to overcome - I would advise that SellBy continue to invest in these big data tools.
+
+As far as Vine reviews go it is very clear that at 14.1% the paid reviews are clearly biased to be favorable.  The fact that the 5 star reviews are less favorable for the paid reviews is an interesting observation.  I would explain this as follows:
+
+- Manufactures who paid to have their product reviewed, likely believe that it will compare well in the market - this could explain why the paid reviews at 4.2 stars are screwed to the high end.
+- Unpaid reviews are open to anyone and the large number of 1 star reviews could be explained by the large number of possibly inferior products in the market - this would also explain why the unpaid reviews at 3.7 stars are close to centre.
+- The slightly lower number of 5 star reviews to me indicated that paid reviews are likely more reliable and that the reviewer has try to be fair to the reader.
+
+All that said I think it is appropriate to the read to interpret these results based on their own understanding of the Vine program reviews.
